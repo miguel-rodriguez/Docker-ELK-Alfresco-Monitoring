@@ -1,0 +1,61 @@
+From 2fae9033755a082b282d9f2e070e0e026154d88a Mon Sep 17 00:00:00 2001
+From: Joao Duarte <jsvduarte@gmail.com>
+Date: Sat, 27 Sep 2014 23:59:50 +0200
+Subject: [PATCH] Fix add_tag behaviour in dns filter
+
+The filter should only modify the event's fields and tags if and only if
+all resolves/reverses succeed. So we clone the event, modify the new
+copy and return it if all operations succeed. Otherwise the original
+event is not modified.
+
+For performance reasons we could reverse the clone logic: clone the
+event, modify the original event and, it case of failure, return the
+backup.
+
+Note: this changes the dns filter behaviour towards add_tag
+---
+ lib/logstash/filters/dns.rb | 12 ++++++---
+ spec/filters/dns_spec.rb         | 60 ++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 68 insertions(+), 4 deletions(-)
+
+diff --git a/lib/logstash/filters/dns.rb b/lib/logstash/filters/dns.rb
+index 46bb075..f23b819 100644
+--- a/lib/logstash/filters/dns.rb
++++ b/lib/logstash/filters/dns.rb
+@@ -70,11 +70,14 @@ def register
+   def filter(event)
+     return unless filter?(event)
+ 
++    new_event = event.clone
++
+     if @resolve
+       begin
+         status = Timeout::timeout(@timeout) {
+-          resolve(event)
++          resolve(new_event)
+         }
++        return if status.nil?
+       rescue Timeout::Error
+         @logger.debug("DNS: resolve action timed out")
+         return
+@@ -84,15 +87,18 @@ def filter(event)
+     if @reverse
+       begin
+         status = Timeout::timeout(@timeout) {
+-          reverse(event)
++          reverse(new_event)
+         }
++        return if status.nil?
+       rescue Timeout::Error
+         @logger.debug("DNS: reverse action timed out")
+         return
+       end
+     end
+ 
+-    filter_matched(event)
++    filter_matched(new_event)
++    yield new_event
++    event.cancel
+   end
+ 
+   private
