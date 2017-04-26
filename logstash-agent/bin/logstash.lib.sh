@@ -1,9 +1,58 @@
 unset CDPATH
-LOGSTASH_HOME=$(cd `dirname $0`/..; pwd)
-export LOGSTASH_HOME
+# This unwieldy bit of scripting is to try to catch instances where Logstash
+# was launched from a symlink, rather than a full path to the Logstash binary
+if [ -L $0 ]; then
+  # Launched from a symlink
+  # --Test for the readlink binary
+  RL=$(which readlink)
+  if [ $? -eq 0 ]; then
+    # readlink exists
+    SOURCEPATH=$($RL $0)
+  else
+    # readlink not found, attempt to parse the output of stat
+    SOURCEPATH=$(stat -c %N $0 | awk '{print $3}' | sed -e 's/\‘//' -e 's/\’//')
+    if [ $? -ne 0 ]; then
+      # Failed to execute or parse stat
+      echo "Failed to set LOGSTASH_HOME from $(cd `dirname $0`/..; pwd)/bin/logstash.lib.sh"
+      echo "You may need to launch Logstash with a full path instead of a symlink."
+      exit 1
+    fi
+  fi
+else
+  # Not a symlink
+  SOURCEPATH=$0
+fi
 
-# Defaults you can override with environment variables
-LS_HEAP_SIZE="${LS_HEAP_SIZE:=500m}"
+LOGSTASH_HOME=$(cd `dirname $SOURCEPATH`/..; pwd)
+export LOGSTASH_HOME
+SINCEDB_DIR=${LOGSTASH_HOME}
+export SINCEDB_DIR
+
+# This block will iterate over the command-line args Logstash was started with
+# It will find the argument _after_ --path.settings and use that to attempt
+# to derive the location of an acceptable jvm.options file
+# It will do nothing if this is not found.
+# This fix is for #6379
+if [ -z "$LS_JVM_OPTS" ]; then
+  found=0
+  for i in "$@"; do
+     if [ $found -eq 1 ]; then
+       if [ -r "${i}/jvm.options" ]; then
+         export LS_JVM_OPTS="${i}/jvm.options"
+         break
+       fi
+     fi
+     if [ "$i" = "--path.settings" ]; then
+       found=1
+     fi
+  done
+fi
+
+parse_jvm_options() {
+  if [ -f "$1" ]; then
+    echo "$(grep "^-" "$1" | tr '\n' ' ')"
+  fi
+}
 
 setup_java() {
   if [ -z "$JAVACMD" ] ; then
@@ -26,35 +75,32 @@ setup_java() {
 
   if [ "$JAVA_OPTS" ] ; then
     echo "WARNING: Default JAVA_OPTS will be overridden by the JAVA_OPTS defined in the environment. Environment JAVA_OPTS are $JAVA_OPTS"  1>&2
-  else
-    # There are no JAVA_OPTS set from the client, we set a predefined
-    # set of options that think are good in general
-    JAVA_OPTS="-XX:+UseParNewGC"
-    JAVA_OPTS="$JAVA_OPTS -XX:+UseConcMarkSweepGC"
-    JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true"
-
-    JAVA_OPTS="$JAVA_OPTS -XX:CMSInitiatingOccupancyFraction=75"
-    JAVA_OPTS="$JAVA_OPTS -XX:+UseCMSInitiatingOccupancyOnly"
   fi
+
+  # Set a default GC log file for use by jvm.options _before_ it's called.
+  if [ -z "$LS_GC_LOG_FILE" ] ; then
+    LS_GC_LOG_FILE="./logstash-gc.log"
+  fi
+
+  # Set the initial JVM options from the jvm.options file.  Look in
+  # /etc/logstash first, and break if that file is found readable there.
+  if [ -z "$LS_JVM_OPTS" ]; then
+      for jvm_options in /etc/logstash/jvm.options \
+                        "$LOGSTASH_HOME"/config/jvm.options;
+                         do
+          if [ -r "$jvm_options" ]; then
+              LS_JVM_OPTS=$jvm_options
+              break
+          fi
+      done
+  fi
+  # use the defaults, first, then override with anything provided
+  LS_JAVA_OPTS="$(parse_jvm_options "$LS_JVM_OPTS") $LS_JAVA_OPTS"
 
   if [ "$LS_JAVA_OPTS" ] ; then
     # The client set the variable LS_JAVA_OPTS, choosing his own
     # set of java opts.
     JAVA_OPTS="$JAVA_OPTS $LS_JAVA_OPTS"
-  fi
-
-  if [ "$LS_HEAP_SIZE" ] ; then
-    JAVA_OPTS="$JAVA_OPTS -Xmx${LS_HEAP_SIZE}"
-  fi
-
-  if [ "$LS_USE_GC_LOGGING" ] ; then
-    JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails"
-    JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCTimeStamps"
-    JAVA_OPTS="$JAVA_OPTS -XX:+PrintClassHistogram"
-    JAVA_OPTS="$JAVA_OPTS -XX:+PrintTenuringDistribution"
-    JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCApplicationStoppedTime"
-    JAVA_OPTS="$JAVA_OPTS -Xloggc:./logstash-gc.log"
-    echo "Writing garbage collection logs to ./logstash-gc.log"
   fi
 
   export JAVACMD
@@ -81,7 +127,11 @@ setup_drip() {
   if [ "$USE_RUBY" = "1" ] ; then
     export JRUBY_OPTS="$JRUBY_OPTS -J-XX:+TieredCompilation -J-XX:TieredStopAtLevel=1 -J-noverify"
   else
-    JAVA_OPTS="$JAVA_OPTS -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -noverify"
+    if [ -z "$JAVA_OPTS" ] ; then
+      LS_JAVA_OPTS="$LS_JAVA_OPTS -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -noverify"
+    else
+      JAVA_OPTS="$JAVA_OPTS -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -noverify"
+    fi
   fi
   export JAVACMD
   export DRIP_INIT_CLASS="org.jruby.main.DripMain"
@@ -103,13 +153,6 @@ setup_vendored_jruby() {
 setup_ruby() {
   RUBYCMD="ruby"
   VENDORED_JRUBY=
-}
-
-jruby_opts() {
-  printf "%s" "--1.9"
-  for i in $JAVA_OPTS ; do
-    printf "%s" " -J$i"
-  done
 }
 
 setup() {
@@ -147,8 +190,8 @@ ruby_exec() {
     # $VENDORED_JRUBY is non-empty so use the vendored JRuby
 
     if [ "$DEBUG" ] ; then
-      echo "DEBUG: exec ${JRUBY_BIN} $(jruby_opts) $@"
+      echo "DEBUG: exec ${JRUBY_BIN} $@"
     fi
-    exec "${JRUBY_BIN}" $(jruby_opts) "$@"
+    exec "${JRUBY_BIN}" "$@"
   fi
 }

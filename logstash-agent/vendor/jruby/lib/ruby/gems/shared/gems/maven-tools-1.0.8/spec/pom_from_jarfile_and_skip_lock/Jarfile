@@ -1,3 +1,0 @@
-jar 'junit:junit', '~> 4.11', :scope => :test
-
-jar 'org.slf4j:simple-slf4', '~> 1.6.4'

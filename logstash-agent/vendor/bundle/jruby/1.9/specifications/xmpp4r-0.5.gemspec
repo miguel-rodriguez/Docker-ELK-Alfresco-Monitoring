@@ -17,8 +17,8 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--quiet", "--title", "XMPP4R is an XMPP/Jabber library for Ruby.", "--opname", "index.html", "--main", "lib/xmpp4r.rb", "--line-numbers", "--inline-source"]
   s.required_ruby_version = Gem::Requirement.new(">= 1.8.4")
   s.rubyforge_project = "xmpp4r"
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "XMPP4R is an XMPP/Jabber library for Ruby."
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 end

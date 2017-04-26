@@ -11,10 +11,10 @@ Gem::Specification.new do |s|
   s.date = "2014-09-28"
   s.email = "nahi@ruby-lang.org"
   s.homepage = "http://github.com/nahi/avl_tree"
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "AVL tree, Red black tree and Lock-free Red black tree in Ruby"
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 
   if s.respond_to? :specification_version then
     s.specification_version = 4

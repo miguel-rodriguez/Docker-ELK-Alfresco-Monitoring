@@ -16,10 +16,10 @@ Gem::Specification.new do |s|
   s.homepage = "http://bundler.io"
   s.licenses = ["MIT"]
   s.required_ruby_version = Gem::Requirement.new(">= 1.8.7")
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "The best way to manage your application's dependencies"
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 
   if s.respond_to? :specification_version then
     s.specification_version = 4

@@ -15,48 +15,10 @@
 =end
 
 require "openssl/buffering"
-require "fcntl"
+require 'fcntl' # used by OpenSSL::SSL::Nonblock (if loaded)
 
 module OpenSSL
   module SSL
-    module SocketForwarder
-      def addr
-        to_io.addr
-      end
-
-      def peeraddr
-        to_io.peeraddr
-      end
-
-      def setsockopt(level, optname, optval)
-        to_io.setsockopt(level, optname, optval)
-      end
-
-      def getsockopt(level, optname)
-        to_io.getsockopt(level, optname)
-      end
-
-      def fcntl(*args)
-        to_io.fcntl(*args)
-      end
-
-      def closed?
-        to_io.closed?
-      end
-
-      def do_not_reverse_lookup=(flag)
-        to_io.do_not_reverse_lookup = flag
-      end
-    end
-
-    module Nonblock
-      def initialize(*args)
-        flag = File::NONBLOCK
-        flag |= @io.fcntl(Fcntl::F_GETFL) if defined?(Fcntl::F_GETFL)
-        @io.fcntl(Fcntl::F_SETFL, flag)
-        super
-      end
-    end
 
     def verify_certificate_identity(cert, hostname)
       should_verify_common_name = true
@@ -101,11 +63,6 @@ module OpenSSL
         return true
       end
 
-      def session
-        SSL::Session.new(self)
-      rescue SSL::Session::SessionError
-        nil
-      end
     end
 
     class SSLServer

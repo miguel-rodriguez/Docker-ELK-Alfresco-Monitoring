@@ -23,7 +23,7 @@ output:
     # Scheme and port can be left out and will be set to the default (http and 9200)
     # In case you specify and additional path, the scheme is required: http://localhost:9200/path
     # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
-    #hosts: ["alfrescoMonitor:5044"]
+    #hosts: ["${alfrescoELKServer}:5044"]
 
     # Optional protocol and basic auth credentials. These are deprecated.
     #protocol: "https"
@@ -98,7 +98,7 @@ output:
   ### Logstash as output
   # logstash:
     # The Logstash hosts
-    # hosts: ["alfrescoMonitor:5044"]
+    # hosts: ["${alfrescoELKServer}:5044"]
 
     # Number of workers per Logstash host.
     #worker: 1
@@ -138,7 +138,7 @@ output:
   ### File as output
   file:
     # Path to the directory where to save the generated files. The option is mandatory.
-    path: /opt/alfresco
+    path: logstashAgentLogs
 
     # Name of the generated files. The default is `jstatbeat` and it generates files: `jstatbeat`, `jstatbeat.1`, `jstatbeat.2`, etc.
     #filename: jstatbeat

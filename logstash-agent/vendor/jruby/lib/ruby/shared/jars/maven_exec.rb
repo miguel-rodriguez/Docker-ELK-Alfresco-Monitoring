@@ -1,4 +1,5 @@
 require 'jar_dependencies'
+require 'jars/maven_factory'
 
 module Jars
   class MavenExec
@@ -19,7 +20,12 @@ module Jars
     attr_reader :basedir, :spec, :specfile
 
     def initialize( spec = nil )
+      @options = {}
       setup( spec )
+    rescue StandardError, LoadError => e
+      # If spec load fails, skip looking for jar-dependencies
+      warn "jar-dependencies: " + e.to_s
+      warn e.backtrace.join( "\n" ) if Jars.verbose?
     end
 
     def setup( spec = nil, allow_no_file = false )
@@ -48,104 +54,26 @@ module Jars
       else
         raise 'spec must be either String or Gem::Specification'
       end
-
       @spec = spec
-    rescue
-      # for all those strange gemspec we skip looking for jar-dependencies
     end
 
     def ruby_maven_install_options=( options )
-      @options = options.dup
-      @options.delete( :ignore_dependencies )
+      @options = options
     end
 
     def resolve_dependencies_list( file )
-      do_resolve_dependencies( *setup_arguments( 'jar_pom.rb', 'dependency:copy-dependencies', 'dependency:list', "-DoutputFile=#{file}" ) )
-    end
+      factory = MavenFactory.new( @options )
+      maven = factory.maven_new( File.expand_path( '../gemspec_pom.rb', __FILE__ ) )
 
-    def resolve_dependencies( file )
-      do_resolve_dependencies( *setup_arguments( 'jars_lock_pom.rb', 'dependency:copy-dependencies', '-DexcludeTransitive=true' , "-Djars.lock=#{file}") )
-    end
+      maven[ 'outputAbsoluteArtifactFilename' ] = 'true'
+      maven[ 'includeTypes' ] = 'jar'
+      maven[ 'outputScope' ] = 'true'
+      maven[ 'useRepositoryLayout' ] = 'true'
+      maven[ 'outputDirectory' ] = "#{Jars.home}"
+      maven[ 'jars.specfile' ] = "#{@specfile}"
+      maven[ 'outputFile' ] = "#{file}"
 
-    private
-
-    def do_resolve_dependencies( *args )
-      lazy_load_maven
-
-      maven = Maven::Ruby::Maven.new
-      maven.verbose = Jars.verbose?
-      maven.exec( *args )
-    end
-
-    def setup_arguments( pom, *goals )
-      args = [ *goals,
-               '-DoutputAbsoluteArtifactFilename=true',
-               '-DincludeTypes=jar',
-               '-DoutputScope=true',
-               '-DuseRepositoryLayout=true',
-               "-DoutputDirectory=#{Jars.home}",
-               '-f', File.dirname( __FILE__ ) + '/' + pom,
-               "-Djars.specfile=#{@specfile}" ]
-
-      if Jars.debug?
-        args << '-X'
-      elsif not Jars.verbose?
-        args << '--quiet'
-      end
-
-      # TODO what todo with https proxy ?
-      # FIX this proxy settings seems not to work
-      if (proxy = Gem.configuration[ :http_proxy ]).is_a?( String )
-        require 'uri'; uri = URI.parse( proxy )
-        args << "-DproxySet=true"
-        args << "-DproxyHost=#{uri.host}"
-        args << "-DproxyPort=#{uri.port}"
-      end
-
-      if Jars.maven_settings
-        args << '-s'
-        args << Jars.maven_settings
-      end
-
-      args << "-Dmaven.repo.local=#{java.io.File.new( Jars.local_maven_repo ).absolute_path}"
-
-      args
-    end
-
-    def lazy_load_maven
-      add_gem_to_load_path( 'ruby-maven' )
-      add_gem_to_load_path( 'ruby-maven-libs' )
-      require 'maven/ruby/maven'
-    end
-
-    def find_spec_via_rubygems( name )
-      require 'rubygems/dependency'
-      dep = Gem::Dependency.new( name )
-      dep.matching_specs( true ).last
-    end
-
-    def add_gem_to_load_path( name )
-      # if the gem is already activated => good
-      return if Gem.loaded_specs[ name ]
-      # just install gem if needed and add it to the load_path
-      # and leave activated gems as they are
-      unless spec = find_spec_via_rubygems( name )
-        install_gem( name )
-        spec = find_spec_via_rubygems( name )
-      end
-      $LOAD_PATH << File.join( spec.full_gem_path, spec.require_path )
-    end
-
-    def install_gem( name )
-      require 'rubygems/dependency_installer'
-      jars = Gem.loaded_specs[ 'jar-dependencies' ]
-      dep = jars.dependencies.detect { |d| d.name == name }
-      req = dep.nil? ? Gem::Requirement.create( '>0' ) : dep.requirement
-      inst = Gem::DependencyInstaller.new( @options ||= {} )
-      inst.install name, req
-    rescue => e
-      warn e.backtrace.join( "\n" ) if Jars.verbose?
-      raise "there was an error installing '#{name}'. please install it manually: #{e.inspect}"
+      maven.exec( 'dependency:copy-dependencies', 'dependency:list' )
     end
   end
 end

@@ -15,8 +15,8 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/ruby-concurrency/ruby-atomic"
   s.licenses = ["Apache-2.0"]
   s.post_install_message = "This gem has been deprecated and merged into Concurrent Ruby (http://concurrent-ruby.com)."
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "An atomic reference implementation for JRuby, Rubinius, and MRI"
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 end

@@ -1,3 +1,4 @@
+# encoding: utf-8
 class LogStash::PluginManager::Command < Clamp::Command
   def gemfile
     @gemfile ||= LogStash::Gemfile.new(File.new(LogStash::Environment::GEMFILE_PATH, 'r+')).load
@@ -5,7 +6,7 @@ class LogStash::PluginManager::Command < Clamp::Command
 
   # If set in debug mode we will raise an exception and display the stacktrace
   def report_exception(readable_message, exception)
-    if ENV["DEBUG"]
+    if debug?
       raise exception
     else
       signal_error("#{readable_message}, message: #{exception.message}")
@@ -13,13 +14,12 @@ class LogStash::PluginManager::Command < Clamp::Command
   end
 
   def display_bundler_output(output)
-    if ENV['DEBUG'] && output
+    if debug? && output
       # Display what bundler did in the last run
       $stderr.puts("Bundler output")
       $stderr.puts(output)
     end
   end
-
 
   # Each plugin install for a gemfile create a path with a unique id.
   # we must clear what is not currently used in the 
@@ -34,5 +34,9 @@ class LogStash::PluginManager::Command < Clamp::Command
   def relative_path(path)
     require "pathname"
     ::Pathname.new(path).relative_path_from(::Pathname.new(LogStash::Environment::LOGSTASH_HOME)).to_s
+  end
+
+  def debug?
+    ENV["DEBUG"]
   end
 end

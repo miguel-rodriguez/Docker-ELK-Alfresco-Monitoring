@@ -16,8 +16,8 @@ Gem::Specification.new do |s|
   s.homepage = "http://snmplib.rubyforge.org"
   s.rdoc_options = ["--main", "README.rdoc", "--title", "SNMP Library for Ruby"]
   s.rubyforge_project = "snmplib"
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "A Ruby implementation of SNMP (the Simple Network Management Protocol)."
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 end

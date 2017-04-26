@@ -6,7 +6,6 @@ Gem::Specification.new do |s|
   s.version = "4.1.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.3") if s.respond_to? :required_rubygems_version=
-  s.require_paths = ["lib"]
   s.authors = ["Eric Hodel", "Dave Thomas", "Phil Hagelberg", "Tony Strauss"]
   s.date = "2014-09-10"
   s.description = "RDoc produces HTML and command-line documentation for Ruby projects.  RDoc\nincludes the +rdoc+ and +ri+ tools for generating and displaying documentation\nfrom the command-line."
@@ -18,8 +17,9 @@ Gem::Specification.new do |s|
   s.licenses = ["Ruby"]
   s.post_install_message = "Depending on your version of ruby, you may need to install ruby rdoc/ri data:\n\n<= 1.8.6 : unsupported\n = 1.8.7 : gem install rdoc-data; rdoc-data --install\n = 1.9.1 : gem install rdoc-data; rdoc-data --install\n>= 1.9.2 : nothing to do! Yay!\n"
   s.rdoc_options = ["--main", "README.rdoc"]
+  s.require_paths = ["lib"]
   s.required_ruby_version = Gem::Requirement.new(">= 1.8.7")
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.1.9"
   s.summary = "RDoc produces HTML and command-line documentation for Ruby projects"
   s.test_files = ["test/test_rdoc_alias.rb", "test/test_rdoc_any_method.rb", "test/test_rdoc_attr.rb", "test/test_rdoc_class_module.rb", "test/test_rdoc_code_object.rb", "test/test_rdoc_comment.rb", "test/test_rdoc_constant.rb", "test/test_rdoc_context.rb", "test/test_rdoc_context_section.rb", "test/test_rdoc_cross_reference.rb", "test/test_rdoc_encoding.rb", "test/test_rdoc_extend.rb", "test/test_rdoc_generator_darkfish.rb", "test/test_rdoc_generator_json_index.rb", "test/test_rdoc_generator_markup.rb", "test/test_rdoc_generator_ri.rb", "test/test_rdoc_include.rb", "test/test_rdoc_markdown.rb", "test/test_rdoc_markdown_test.rb", "test/test_rdoc_markup.rb", "test/test_rdoc_markup_attribute_manager.rb", "test/test_rdoc_markup_attributes.rb", "test/test_rdoc_markup_document.rb", "test/test_rdoc_markup_formatter.rb", "test/test_rdoc_markup_hard_break.rb", "test/test_rdoc_markup_heading.rb", "test/test_rdoc_markup_include.rb", "test/test_rdoc_markup_indented_paragraph.rb", "test/test_rdoc_markup_paragraph.rb", "test/test_rdoc_markup_parser.rb", "test/test_rdoc_markup_pre_process.rb", "test/test_rdoc_markup_raw.rb", "test/test_rdoc_markup_to_ansi.rb", "test/test_rdoc_markup_to_bs.rb", "test/test_rdoc_markup_to_html.rb", "test/test_rdoc_markup_to_html_crossref.rb", "test/test_rdoc_markup_to_html_snippet.rb", "test/test_rdoc_markup_to_joined_paragraph.rb", "test/test_rdoc_markup_to_label.rb", "test/test_rdoc_markup_to_markdown.rb", "test/test_rdoc_markup_to_rdoc.rb", "test/test_rdoc_markup_to_table_of_contents.rb", "test/test_rdoc_markup_to_tt_only.rb", "test/test_rdoc_markup_verbatim.rb", "test/test_rdoc_method_attr.rb", "test/test_rdoc_normal_class.rb", "test/test_rdoc_normal_module.rb", "test/test_rdoc_options.rb", "test/test_rdoc_parser.rb", "test/test_rdoc_parser_c.rb", "test/test_rdoc_parser_changelog.rb", "test/test_rdoc_parser_markdown.rb", "test/test_rdoc_parser_rd.rb", "test/test_rdoc_parser_ruby.rb", "test/test_rdoc_parser_simple.rb", "test/test_rdoc_rd.rb", "test/test_rdoc_rd_block_parser.rb", "test/test_rdoc_rd_inline.rb", "test/test_rdoc_rd_inline_parser.rb", "test/test_rdoc_rdoc.rb", "test/test_rdoc_require.rb", "test/test_rdoc_ri_driver.rb", "test/test_rdoc_ri_paths.rb", "test/test_rdoc_ruby_lex.rb", "test/test_rdoc_ruby_token.rb", "test/test_rdoc_rubygems_hook.rb", "test/test_rdoc_servlet.rb", "test/test_rdoc_single_class.rb", "test/test_rdoc_stats.rb", "test/test_rdoc_store.rb", "test/test_rdoc_task.rb", "test/test_rdoc_text.rb", "test/test_rdoc_token_stream.rb", "test/test_rdoc_tom_doc.rb", "test/test_rdoc_top_level.rb"]
 

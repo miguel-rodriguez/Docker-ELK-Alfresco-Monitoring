@@ -26,4 +26,3 @@ class Integer
     OpenSSL::BN::new(self)
   end
 end # Integer
-

@@ -1,12 +1,19 @@
+# encoding: utf-8
 require "rubygems/package"
 
 module LogStash::PluginManager
+
+  class ValidationError < StandardError; end
+
   # check for valid logstash plugin gem name & version or .gem file, logs errors to $stdout
   # uses Rubygems API and will remotely validated agains the current Gem.sources
   # @param plugin [String] plugin name or .gem file path
   # @param version [String] gem version requirement string
+  # @param [Hash] options the options used to setup external components
+  # @option options [Array<String>] :rubygems_source Gem sources to lookup for the verification
   # @return [Boolean] true if valid logstash plugin gem name & version or a .gem file
-  def self.logstash_plugin?(plugin, version = nil)
+  def self.logstash_plugin?(plugin, version = nil, options={})
+
     if plugin_file?(plugin)
       begin
         return logstash_plugin_gem_spec?(plugin_file_spec(plugin))
@@ -17,6 +24,7 @@ module LogStash::PluginManager
       end
     else
       dep = Gem::Dependency.new(plugin, version || Gem::Requirement.default)
+      Gem.sources = Gem::SourceList.from(options[:rubygems_source]) if options[:rubygems_source]
       specs, errors = Gem::SpecFetcher.fetcher.spec_for_dependency(dep)
 
       # dump errors
@@ -34,6 +42,19 @@ module LogStash::PluginManager
         return false
       end
     end
+  end
+
+  # Fetch latest version information as in rubygems
+  # @param [String] The plugin name
+  # @param [Hash] Set of available options when fetching the information
+  # @option options [Boolean] :pre Include pre release versions in the search (default: false)
+  # @return [Hash] The plugin version information as returned by rubygems
+  def self.fetch_latest_version_info(plugin, options={})
+    exclude_prereleases =  options.fetch(:pre, false)
+    versions = LogStash::Rubygems.versions(plugin)
+    raise ValidationError.new("Something went wrong with the validation. You can skip the validation with the --no-verify option") if !versions.is_a?(Array) || versions.empty?
+    versions = versions.select { |version| !version["prerelease"] } if !exclude_prereleases
+    versions.first
   end
 
   # @param spec [Gem::Specification] plugin gem specification

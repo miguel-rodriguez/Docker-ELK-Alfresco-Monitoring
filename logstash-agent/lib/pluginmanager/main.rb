@@ -1,3 +1,4 @@
+# encoding: utf-8
 $LOAD_PATH.unshift(File.expand_path(File.join(__FILE__, "..", "..")))
 
 require "bootstrap/environment"
@@ -11,30 +12,38 @@ module LogStash
 end
 
 require "clamp"
-require "pluginmanager/command"
 require "pluginmanager/util"
 require "pluginmanager/gemfile"
 require "pluginmanager/install"
-require "pluginmanager/uninstall"
+require "pluginmanager/remove"
 require "pluginmanager/list"
 require "pluginmanager/update"
+require "pluginmanager/pack"
+require "pluginmanager/unpack"
+require "pluginmanager/generate"
+require "pluginmanager/prepare_offline_pack"
 
 module LogStash
   module PluginManager
     class Error < StandardError; end
 
     class Main < Clamp::Command
-      subcommand "install", "Install a plugin", LogStash::PluginManager::Install
-      subcommand "uninstall", "Uninstall a plugin", LogStash::PluginManager::Uninstall
-      subcommand "update", "Install a plugin", LogStash::PluginManager::Update
-      subcommand "list", "List all installed plugins", LogStash::PluginManager::List
+      subcommand "list", "List all installed Logstash plugins", LogStash::PluginManager::List
+      subcommand "install", "Install a Logstash plugin", LogStash::PluginManager::Install
+      subcommand "remove", "Remove a Logstash plugin", LogStash::PluginManager::Remove
+      subcommand "update", "Update a plugin", LogStash::PluginManager::Update
+      subcommand "pack", "Package currently installed plugins, Deprecated: Please use prepare-offline-pack instead", LogStash::PluginManager::Pack
+      subcommand "unpack", "Unpack packaged plugins, Deprecated: Please use prepare-offline-pack instead", LogStash::PluginManager::Unpack
+      subcommand "generate", "Create the foundation for a new plugin", LogStash::PluginManager::Generate
+      subcommand "uninstall", "Uninstall a plugin. Deprecated: Please use remove instead", LogStash::PluginManager::Remove
+      subcommand "prepare-offline-pack", "Create an archive of specified plugins to use for offline installation", LogStash::PluginManager::PrepareOfflinePack
     end
   end
 end
 
 if $0 == __FILE__
   begin
-    LogStash::PluginManager::Main.run("bin/plugin", ARGV)
+    LogStash::PluginManager::Main.run("bin/logstash-plugin", ARGV)
   rescue LogStash::PluginManager::Error => e
     $stderr.puts(e.message)
     exit(1)

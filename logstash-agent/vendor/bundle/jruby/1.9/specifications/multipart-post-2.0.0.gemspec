@@ -15,8 +15,8 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.rdoc_options = ["--main", "README.md", "-SHN", "-f", "darkfish"]
   s.rubyforge_project = "caldersphere"
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "A multipart form post accessory for Net::HTTP."
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 end

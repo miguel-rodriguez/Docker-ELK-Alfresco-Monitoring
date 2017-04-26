@@ -15,10 +15,10 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.post_install_message = "\n***\n\nThanks for installing rufus-scheduler 3.0.9\n\nIt might not be 100% compatible with rufus-scheduler 2.x.\n\nIf you encounter issues with this new rufus-scheduler, especially\nif your app worked fine with previous versions of it, you can\n\nA) Forget it and peg your Gemfile to rufus-scheduler 2.0.24\n\nand / or\n\nB) Take some time to carefully report the issue at\n   https://github.com/jmettraux/rufus-scheduler/issues\n\nFor general help about rufus-scheduler, ask via:\nhttp://stackoverflow.com/questions/ask?tags=rufus-scheduler+ruby\n\nCheers.\n\n***\n    "
   s.rubyforge_project = "rufus"
-  s.rubygems_version = "2.4.6"
+  s.rubygems_version = "2.4.8"
   s.summary = "job scheduler for Ruby (at, cron, in and every jobs)"
 
-  s.installed_by_version = "2.4.6" if s.respond_to? :installed_by_version
+  s.installed_by_version = "2.4.8" if s.respond_to? :installed_by_version
 
   if s.respond_to? :specification_version then
     s.specification_version = 3

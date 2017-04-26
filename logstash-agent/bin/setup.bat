@@ -15,44 +15,58 @@ goto finally
 
 :setup_jruby
 REM setup_java()
+if not defined JAVA_HOME IF EXIST %ProgramData%\Oracle\java\javapath\java.exe (
+    for /f "tokens=2 delims=[]" %%a in ('dir %ProgramData%\Oracle\java\javapath\java.exe') do @set JAVA_EXE=%%a
+)
+if defined JAVA_EXE set JAVA_HOME=%JAVA_EXE:\bin\java.exe=%
+if defined JAVA_EXE echo Using JAVA_HOME=%JAVA_HOME% retrieved from %ProgramData%\Oracle\java\javapath\java.exe
+
 if not defined JAVA_HOME goto missing_java_home
 REM ***** JAVA options *****
 
-if "%LS_MIN_MEM%" == "" (
-set LS_MIN_MEM=256m
+if "%LS_HEAP_SIZE%" == "" (
+    set LS_HEAP_SIZE=1g
 )
 
-if "%LS_MAX_MEM%" == "" (
-set LS_MAX_MEM=1g
+IF NOT "%JAVA_OPTS%" == "" (
+    ECHO JAVA_OPTS was set to [%JAVA_OPTS%]. Logstash will trust these options, and not set any defaults that it might usually set
+    goto opts_defined
 )
 
-set JAVA_OPTS=%JAVA_OPTS% -Xms%LS_MIN_MEM% -Xmx%LS_MAX_MEM%
+    SET JAVA_OPTS=%JAVA_OPTS% -Xmx%LS_HEAP_SIZE%
 
-REM Enable aggressive optimizations in the JVM
-REM    - Disabled by default as it might cause the JVM to crash
-REM set JAVA_OPTS=%JAVA_OPTS% -XX:+AggressiveOpts
+    REM Enable aggressive optimizations in the JVM
+    REM    - Disabled by default as it might cause the JVM to crash
+    REM set JAVA_OPTS=%JAVA_OPTS% -XX:+AggressiveOpts
 
-set JAVA_OPTS=%JAVA_OPTS% -XX:+UseParNewGC
-set JAVA_OPTS=%JAVA_OPTS% -XX:+UseConcMarkSweepGC
-set JAVA_OPTS=%JAVA_OPTS% -XX:+CMSParallelRemarkEnabled
-set JAVA_OPTS=%JAVA_OPTS% -XX:SurvivorRatio=8
-set JAVA_OPTS=%JAVA_OPTS% -XX:MaxTenuringThreshold=1
-set JAVA_OPTS=%JAVA_OPTS% -XX:CMSInitiatingOccupancyFraction=75
-set JAVA_OPTS=%JAVA_OPTS% -XX:+UseCMSInitiatingOccupancyOnly
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:+UseParNewGC
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:+UseConcMarkSweepGC
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:+CMSParallelRemarkEnabled
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:SurvivorRatio=8
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:MaxTenuringThreshold=1
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:CMSInitiatingOccupancyFraction=75
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:+UseCMSInitiatingOccupancyOnly
 
-REM GC logging options -- uncomment to enable
-REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCDetails
-REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCTimeStamps
-REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintClassHistogram
-REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintTenuringDistribution
-REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCApplicationStoppedTime
-REM JAVA_OPTS=%JAVA_OPTS% -Xloggc:/var/log/logstash/gc.log
+    REM GC logging options -- uncomment to enable
+    REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCDetails
+    REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCTimeStamps
+    REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintClassHistogram
+    REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintTenuringDistribution
+    REM JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCApplicationStoppedTime
+    REM JAVA_OPTS=%JAVA_OPTS% -Xloggc:/var/log/logstash/gc.log
 
-REM Causes the JVM to dump its heap on OutOfMemory.
-set JAVA_OPTS=%JAVA_OPTS% -XX:+HeapDumpOnOutOfMemoryError
-REM The path to the heap dump location, note directory must exists and have enough
-REM space for a full heap dump.
-REM JAVA_OPTS=%JAVA_OPTS% -XX:HeapDumpPath="$LS_HOME/logs/heapdump.hprof"
+    REM Causes the JVM to dump its heap on OutOfMemory.
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:+HeapDumpOnOutOfMemoryError
+    REM The path to the heap dump location, note directory must exists and have enough
+    REM space for a full heap dump.
+    SET JAVA_OPTS=%JAVA_OPTS% -XX:HeapDumpPath="%LS_HOME%/heapdump.hprof"
+:opts_defined
+
+
+IF NOT "%LS_JAVA_OPTS%" == "" (
+    ECHO LS_JAVA_OPTS was set to [%LS_JAVA_OPTS%]. This will be appended to the JAVA_OPTS [%JAVA_OPTS%]
+    SET JAVA_OPTS=%JAVA_OPTS% %LS_JAVA_OPTS%
+)
 
 REM setup_vendored_jruby()
 set JRUBY_BIN="%LS_HOME%\vendor\jruby\bin\jruby"
