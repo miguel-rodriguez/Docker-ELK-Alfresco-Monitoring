@@ -15,8 +15,7 @@ now=`date +"%Y-%m-%d-%T"`
 if [ "$1" = "start" ] ; then
   echo "Starting logstash"
   #Start processes in the background
-  #nohup ${logstashAgentDir}/bin/logstash -f ${logstashAgentDir}/logstash.conf > /dev/null 2>&1 &
-  nohup ${logstashAgentDir}/bin/logstash -f ${logstashAgentDir}/logstash.conf > logstash.log &
+  nohup ${logstashAgentDir}/bin/logstash -f ${logstashAgentDir}/logstash.conf > /dev/null 2>&1 &
   echo "Starting jstatbeat"
   host=`grep "host =>" logstash.conf | grep -v "#" | awk -F "\"" '{print $2}'`
   sed -i -e 's/hosts: \[.*/hosts: \["'${host}':5044"\]/g' jstatbeat.yml
