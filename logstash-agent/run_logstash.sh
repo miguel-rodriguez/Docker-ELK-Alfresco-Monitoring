@@ -3,6 +3,7 @@ export tomcatLogs=/opt/alfresco/tomcat/logs
 export logstashAgentDir=/opt/logstash-agent
 export logstashAgentLogs=${logstashAgentDir}/logs
 export alfrescoELKServer=172.17.0.2
+collectAuditData="no"
 
 if [ -z "$logstashAgentDir" ]; then
   echo "Please set logstashAgentDir variable to the path of your logstash-agent folder"
@@ -23,12 +24,11 @@ if [ "$1" = "start" ] ; then
   LANG=POSIX nohup ./jstatbeat -c jstatbeat.yml > /dev/null 2>&1 &
   echo "Starting dstat"
   nohup dstat -tam --output ${logstashAgentLogs}/dstat-${now}.log 5 > /dev/null 2>&1 &
-  echo "Staring audit access script"
-  sed -i -e "s@auditRoot=.*@auditRoot=${logstashAgentLogs}@g" audit-access.sh
-  nohup ${logstashAgentDir}/audit-access.sh &>${logstashAgentLogs}/audit-access.log &
-  echo "Staring audit RM script"
-  sed -i -e "s@auditRoot=.*@auditRoot=${logstashAgentLogs}@g" audit-rm.sh
-  nohup ${logstashAgentDir}/audit-rm.sh &>${logstashAgentLogs}/audit-rm.log &
+  if [ "${collectAuditData}" = "yes" ] ; then
+    echo "Staring audit access script"
+    sed -i -e "s@auditRoot=.*@auditRoot=${logstashAgentLogs}@g" audit-access.sh
+    nohup ${logstashAgentDir}/audit-access.sh &>${logstashAgentLogs}/audit-access.log &
+  fi
 elif [ "$1" = "stop" ] ; then
   echo "Stopping logstash"
   #Terminate previous processes
@@ -37,10 +37,10 @@ elif [ "$1" = "stop" ] ; then
   ps -ef | grep "jstatbeat" | grep -v grep | awk '{print $2}' | xargs -I {} kill -9 {}
   echo "Stopping dstat"
   ps -ef | grep "dstat" | grep -v grep | awk '{print $2}' | xargs -I {} kill -9 {}
-  echo "Stopping audit access script"
-  ps -ef | grep "${logstashAgentDir}/audit-access.sh" | grep -v grep | awk '{print $2}' | xargs -I {} kill -9 {}
-  echo "Stopping audit RM script"
-  ps -ef | grep "${logstashAgentDir}/audit-rm.sh" | grep -v grep | awk '{print $2}' | xargs -I {} kill -9 {}
+  if [ "${collectAuditData}" = "yes" ] ; then
+    echo "Stopping audit access script"
+    ps -ef | grep "${logstashAgentDir}/audit-access.sh" | grep -v grep | awk '{print $2}' | xargs -I {} kill -9 {}
+  fi
 else
   echo "Use run_logstash.sh <start|stop>"
 fi
