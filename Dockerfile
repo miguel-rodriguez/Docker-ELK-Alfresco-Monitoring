@@ -1,5 +1,9 @@
 FROM sebp/elk:530
 
+# Increase vm
+RUN cat "vm.max_map_count=262144" >> /etc/sysctl.conf
+RUN sysctl -p
+
 # Install custom logstash configuration
 ADD logstash.conf /etc/logstash/conf.d/logstash.conf
 
