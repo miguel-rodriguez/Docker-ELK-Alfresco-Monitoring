@@ -18,7 +18,7 @@ ADD SQLTool.jar /opt/activities
 ADD activities.properties /opt/activities
 
 # Install activities files
-RUN mkdir /opt/workflows
+RUN mkdir -p /opt/workflows/logs
 RUN mkdir -p /data/logs/workflows
 ADD SQLTool.jar /opt/workflows
 ADD workflows.properties /opt/workflows
